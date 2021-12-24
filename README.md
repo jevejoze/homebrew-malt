@@ -9,10 +9,10 @@ Spot an error? Find a place which can be improved? Or your favorite application 
 ## Usage
 
 ```sh
-brew tap kidonng/malt
+brew tap simplejava8/malt
 brew install <formula>
 # Or just
-brew install kidonng/malt/<formula>
+brew install simplejava8/malt/<formula>
 ```
 
 ## Formulae
