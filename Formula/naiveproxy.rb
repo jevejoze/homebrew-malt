@@ -16,4 +16,12 @@ class Naiveproxy < Formula
 
     pkgetc.install "config.json"
   end
+  
+  service do
+    run opt_bin/"naive"
+    keep_alive true
+    error_log_path var/"log/naive.log"
+    log_path var/"log/naive.log"
+    working_dir ENV["HOME"]
+  end
 end
