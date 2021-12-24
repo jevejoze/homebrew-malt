@@ -18,7 +18,7 @@ class Naiveproxy < Formula
   end
   
   service do
-    run opt_bin/"naive"
+    run [opt_bin/"naive","/etc/naiveproxy/config.json"]
     keep_alive true
     error_log_path var/"log/naive.log"
     log_path var/"log/naive.log"
