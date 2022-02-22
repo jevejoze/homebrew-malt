@@ -4,10 +4,10 @@ class Naiveproxy < Formula
   version "98.0.4758.80-1"
   if Hardware::CPU.intel?
     url "https://github.com/klzgrad/naiveproxy/releases/download/v#{version}/naiveproxy-v#{version}-mac-x64.tar.xz"
-    sha256 "339d212531d3786773f4042f885da0cb8622db4812854a7526687b9583f29909"
+    sha256 "2e8513de17cfe188137f43dac4543fd1db20ee5e9ec1d88393a918d3c61f7e11"
   else
     url "https://github.com/klzgrad/naiveproxy/releases/download/v#{version}/naiveproxy-v#{version}-mac-arm64.tar.xz"
-    sha256 "3d62f96608f2077746b879385c4849be1cc588933c95125ca88c6bdfebbdc364"
+    sha256 "618c277d89a7429a4b35210707ba426e1a59dfe52d7390299f22647738d0322d"
   end
   license "BSD-3-Clause"
 
