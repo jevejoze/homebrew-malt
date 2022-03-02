@@ -1,7 +1,7 @@
 class Naiveproxy < Formula
   desc "Network proxy"
   homepage "https://github.com/klzgrad/naiveproxy"
-  version "v98.0.4758.80-2"
+  version "98.0.4758.80-2"
   if Hardware::CPU.intel?
     url "https://github.com/klzgrad/naiveproxy/releases/download/v#{version}/naiveproxy-v#{version}-mac-x64.tar.xz"
     sha256 "84b5b9578dda0eb5c1083417384264203a02370f5251ea0620aae4aa6be0dfdb"
