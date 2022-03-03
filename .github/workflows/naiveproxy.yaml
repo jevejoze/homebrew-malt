@@ -52,5 +52,7 @@ jobs:
           EOF
       - name: Commit
         run: |
+          git config user.name 'github action'
+          git config user.email '<>'
           git commit -am "update naiveproxy to ${{ env.LAST_VERSION }}"
           git push
