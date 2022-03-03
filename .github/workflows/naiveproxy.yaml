@@ -12,14 +12,14 @@ jobs:
         run: |
           curl -sL https://api.github.com/repos/klzgrad/naiveproxy/releases/latest | \
           jq -r ".tag_name" > /tmp/naiveproxy_lastversion.txt
-        run: echo "LAST_VERSION=$(cut -c 2- /tmp/naiveproxy_lastversion.txt)" >> $GITHUB_ENV
+      - run: echo "LAST_VERSION=$(cut -c 2- /tmp/naiveproxy_lastversion.txt)" >> $GITHUB_ENV
       - name: sha256sum
         run: curl -o /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz -LO https://github.com/klzgrad/naiveproxy/releases/download/v${{ env.LAST_VERSION }}/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz
-        run: openssl sha256 /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz >> /tmp/x64_sha256.txt
-        run: echo "X64_SHA256SUM=$(cut -d' ' -f2 /tmp/x64_sha256.txt)" >> $GITHUB_ENV
-        run: curl -o /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz -LO https://github.com/klzgrad/naiveproxy/releases/download/v${{ env.LAST_VERSION }}/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz
-        run: openssl sha256 /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz >> /tmp/arm64_sha256.txt 
-        run: echo "ARM64_SHA256SUM=$(cut -d' ' -f2 /tmp/arm64_sha256.txt)" >> $GITHUB_ENV
+      - run: openssl sha256 /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz >> /tmp/x64_sha256.txt
+      - run: echo "X64_SHA256SUM=$(cut -d' ' -f2 /tmp/x64_sha256.txt)" >> $GITHUB_ENV
+      - run: curl -o /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz -LO https://github.com/klzgrad/naiveproxy/releases/download/v${{ env.LAST_VERSION }}/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz
+      - run: openssl sha256 /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz >> /tmp/arm64_sha256.txt 
+      - run: echo "ARM64_SHA256SUM=$(cut -d' ' -f2 /tmp/arm64_sha256.txt)" >> $GITHUB_ENV
       - name: modify fomula 
         run: |
           cat <<EOF > Formula/naiveproxy.rb
