@@ -1,0 +1,56 @@
+name: follow naiveproxy
+on:
+  push
+jobs:
+  get-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.REPO_SCOPED_TOKEN }}
+      - name: Fetch release version
+        run: |
+          curl -sL https://api.github.com/repos/klzgrad/naiveproxy/releases/latest | \
+          jq -r ".tag_name" > /tmp/naiveproxy_lastversion.txt
+        run: echo "LAST_VERSION=$(cut -c 2- /tmp/naiveproxy_lastversion.txt)" >> $GITHUB_ENV
+      - name: sha256sum
+        run: curl -o /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz -LO https://github.com/klzgrad/naiveproxy/releases/download/v${{ env.LAST_VERSION }}/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz
+        run: openssl sha256 /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz >> /tmp/x64_sha256.txt
+        run: echo "X64_SHA256SUM=$(cut -d' ' -f2 /tmp/x64_sha256.txt)" >> $GITHUB_ENV
+        run: curl -o /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz -LO https://github.com/klzgrad/naiveproxy/releases/download/v${{ env.LAST_VERSION }}/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz
+        run: openssl sha256 /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz >> /tmp/arm64_sha256.txt 
+        run: echo "ARM64_SHA256SUM=$(cut -d' ' -f2 /tmp/arm64_sha256.txt)" >> $GITHUB_ENV
+      - name: modify fomula 
+        run: |
+          cat <<EOF > Formula/naiveproxy.rb
+          class Naiveproxy < Formula
+            desc "Network proxy"
+            homepage "https://github.com/klzgrad/naiveproxy"
+            version "${{ env.LAST_VERSION }}"
+            if Hardware::CPU.intel?
+              url "https://github.com/klzgrad/naiveproxy/releases/download/v#{version}/naiveproxy-v#{version}-mac-x64.tar.xz"
+              sha256 "${{ env.X64_SHA256SUM }}"
+            else
+              url "https://github.com/klzgrad/naiveproxy/releases/download/v#{version}/naiveproxy-v#{version}-mac-arm64.tar.xz"
+              sha256 "${{ env.ARM64_SHA256SUM }}"
+            end
+            license "BSD-3-Clause"
+
+            def install
+              bin.install "naive"
+              pkgetc.install "config.json"
+            end
+            
+            service do
+              run [opt_bin/"naive","/etc/naiveproxy/config.json"]
+              keep_alive true
+              error_log_path var/"log/naive.log"
+              log_path var/"log/naive.log"
+              working_dir ENV["HOME"]
+            end
+          end
+          EOF
+      - name: Commit
+        run: |
+          git commit -am "update naiveproxy to ${{ env.LAST_VERSION }}"
+          git push
