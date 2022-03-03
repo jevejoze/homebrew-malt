@@ -12,15 +12,26 @@ jobs:
         run: |
           curl -sL https://api.github.com/repos/klzgrad/naiveproxy/releases/latest | \
           jq -r ".tag_name" > /tmp/naiveproxy_lastversion.txt
-      - run: echo "LAST_VERSION=$(cut -c 2- /tmp/naiveproxy_lastversion.txt)" >> $GITHUB_ENV
-      - name: sha256sum
-        run: curl -o /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz -LO https://github.com/klzgrad/naiveproxy/releases/download/v${{ env.LAST_VERSION }}/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz
-      - run: openssl sha256 /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz >> /tmp/x64_sha256.txt
-      - run: echo "X64_SHA256SUM=$(cut -d' ' -f2 /tmp/x64_sha256.txt)" >> $GITHUB_ENV
-      - run: curl -o /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz -LO https://github.com/klzgrad/naiveproxy/releases/download/v${{ env.LAST_VERSION }}/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz
-      - run: openssl sha256 /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz >> /tmp/arm64_sha256.txt 
-      - run: echo "ARM64_SHA256SUM=$(cut -d' ' -f2 /tmp/arm64_sha256.txt)" >> $GITHUB_ENV
-      - name: modify fomula 
+          echo "LAST_VERSION=$(cut -c 2- /tmp/naiveproxy_lastversion.txt)" >> $GITHUB_ENV
+      - name: Check if updates are needed
+        run: |
+          LOCAL_VERSION = $(grep version Formula/naiveproxy.rb | head -1 | cut -d'"' -f2)
+          if [ "${{ env.LAST_VERSION }}" = "${{ LOCAL_VERSION }}" ]; then
+              echo "UPDATE=true" >> $GITHUB_ENV
+          else
+              echo "UPDATE=false" >> $GITHUB_ENV
+          fi
+      - name: Calculate the hash
+        if: env.UPDATE == true
+        run: |
+          curl -o /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz -LO https://github.com/klzgrad/naiveproxy/releases/download/v${{ env.LAST_VERSION }}/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz
+          openssl sha256 /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz >> /tmp/x64_sha256.txt
+          echo "X64_SHA256SUM=$(cut -d' ' -f2 /tmp/x64_sha256.txt)" >> $GITHUB_ENV
+          curl -o /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz -LO https://github.com/klzgrad/naiveproxy/releases/download/v${{ env.LAST_VERSION }}/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz
+          openssl sha256 /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz >> /tmp/arm64_sha256.txt 
+          echo "ARM64_SHA256SUM=$(cut -d' ' -f2 /tmp/arm64_sha256.txt)" >> $GITHUB_ENV
+      - name: Update Fomula
+        if: env.UPDATE == true
         run: |
           cat <<EOF > Formula/naiveproxy.rb
           class Naiveproxy < Formula
@@ -51,6 +62,9 @@ jobs:
           end
           EOF
       - name: Commit
+        if: env.UPDATE == true
         run: |
+          git config user.name 'bot'
+          git config user.email '<>'
           git commit -am "update naiveproxy to ${{ env.LAST_VERSION }}"
           git push
