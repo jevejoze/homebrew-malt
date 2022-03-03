@@ -4,7 +4,7 @@ on:
     paths-ignore:
       - "Formula/**"
 jobs:
-  get-version:
+  update:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -17,7 +17,7 @@ jobs:
           echo "LAST_VERSION=$(cut -c 2- /tmp/naiveproxy_lastversion.txt)" >> $GITHUB_ENV
       - name: Check if updates are needed
         run: |
-          LOCAL_VERSION = $(grep version Formula/naiveproxy.rb | head -1 | cut -d'"' -f2)
+          set LOCAL_VERSION="$(grep version Formula/naiveproxy.rb | head -1 | cut -d'"' -f2)"
           if [ "${{ env.LAST_VERSION }}" = "${{ LOCAL_VERSION }}" ]; then
               echo "UPDATE=true" >> $GITHUB_ENV
           else
