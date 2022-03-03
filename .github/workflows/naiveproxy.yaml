@@ -1,8 +1,7 @@
 name: follow naiveproxy
 on:
-  push:
-    paths-ignore:
-      - "Formula/**"
+  schedule:
+    - cron: "0 16 * * 4"
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -18,7 +17,7 @@ jobs:
           
           grep version Formula/naiveproxy.rb | head -1 | cut -d'"' -f2 > /tmp/naiveproxy_localversion.txt
           echo "LOCAL_VERSION=$(cat /tmp/naiveproxy_localversion.txt)" >> $GITHUB_ENV
-      - name: Check if updates are needed
+      - name: Check for updates
         run: |
           if [ "${{ env.LAST_VERSION }}" = "${{ env.LOCAL_VERSION }}" ]; then
               echo "UPDATE=false" >> $GITHUB_ENV
