@@ -1,6 +1,8 @@
 name: follow naiveproxy
 on:
-  push
+  push:
+    paths-ignore:
+      - "Formula/**"
 jobs:
   get-version:
     runs-on: ubuntu-latest
