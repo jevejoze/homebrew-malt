@@ -17,6 +17,7 @@ jobs:
           echo "LAST_VERSION=$(cut -c 2- /tmp/naiveproxy_lastversion.txt)" >> $GITHUB_ENV
       - name: Check if updates are needed
         run: |
+          pwd
           echo "LOCAL_VERSION=$(grep version Formula/naiveproxy.rb | head -1 | cut -d'\"' -f2)" >> $GITHUB_ENV
           if [ "${{ env.LAST_VERSION }}" = "${{ env.LOCAL_VERSION }}" ]; then
               echo "UPDATE=true" >> $GITHUB_ENV
