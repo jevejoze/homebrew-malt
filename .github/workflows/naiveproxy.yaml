@@ -19,7 +19,7 @@ jobs:
           echo "LOCAL_VERSION=$(cat /tmp/naiveproxy_localversion.txt)" >> $GITHUB_ENV
       - name: Check for updates
         run: |
-          if [ "${{ env.LAST_VERSION }}" = "${{ env.LOCAL_VERSION }}" ]; then
+          if [ "${{ env.LAST_VERSION }}" == "${{ env.LOCAL_VERSION }}" ]; then
               echo "UPDATE=false" >> $GITHUB_ENV
           else
               echo "UPDATE=true" >> $GITHUB_ENV
