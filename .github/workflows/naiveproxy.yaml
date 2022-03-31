@@ -19,14 +19,12 @@ jobs:
       - name: Check for updates
         run: |
           if [ "${{ env.LAST_VERSION }}" = "${{ env.LOCAL_VERSION }}" ]; then
-              echo "No need to upgrade"
               echo "UPDATE=false" >> $GITHUB_ENV
           else
-              echo "Need upgrade"
               echo "UPDATE=true" >> $GITHUB_ENV
           fi
       - name: Calculate the hash
-        if: env.UPDATE == true
+        if: env.UPDATE=true
         run: |
           curl -o /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz -LO https://github.com/klzgrad/naiveproxy/releases/download/v${{ env.LAST_VERSION }}/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz
           openssl sha256 /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz >> /tmp/x64_sha256.txt
@@ -35,7 +33,7 @@ jobs:
           openssl sha256 /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz >> /tmp/arm64_sha256.txt 
           echo "ARM64_SHA256SUM=$(cut -d' ' -f2 /tmp/arm64_sha256.txt)" >> $GITHUB_ENV
       - name: Update Fomula
-        if: env.UPDATE == true
+        if: env.UPDATE=true
         run: |
           cat <<EOF > Formula/naiveproxy.rb
           class Naiveproxy < Formula
