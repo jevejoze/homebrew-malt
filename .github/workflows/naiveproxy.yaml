@@ -1,6 +1,7 @@
 name: follow naiveproxy
 on:
-  push:
+  schedule:
+   - cron: "0 0 * * 1"
 jobs:
   update:
     runs-on: ubuntu-latest
