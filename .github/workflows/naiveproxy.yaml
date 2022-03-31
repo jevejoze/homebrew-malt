@@ -1,7 +1,6 @@
 name: follow naiveproxy
 on:
-  schedule:
-    - cron: "0 0 * * 1"
+  push:
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -19,9 +18,11 @@ jobs:
           echo "LOCAL_VERSION=$(cat /tmp/naiveproxy_localversion.txt)" >> $GITHUB_ENV
       - name: Check for updates
         run: |
-          if [ "${{ env.LAST_VERSION }}" == "${{ env.LOCAL_VERSION }}" ]; then
+          if [ "${{ env.LAST_VERSION }}" = "${{ env.LOCAL_VERSION }}" ]; then
+              echo "No need to upgrade"
               echo "UPDATE=false" >> $GITHUB_ENV
           else
+              echo "Need upgrade"
               echo "UPDATE=true" >> $GITHUB_ENV
           fi
       - name: Calculate the hash
