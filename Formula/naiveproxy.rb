@@ -1,13 +1,13 @@
 class Naiveproxy < Formula
   desc "Network proxy"
   homepage "https://github.com/klzgrad/naiveproxy"
-  version "127.0.6533.64-1"
+  version "127.0.6533.64-2"
   if Hardware::CPU.intel?
     url "https://github.com/klzgrad/naiveproxy/releases/download/v#{version}/naiveproxy-v#{version}-mac-x64.tar.xz"
-    sha256 "9c49ddb7dc7cf72a2f906c74c5bc2757088f8cdaae559b1e0f1918602c429e2a"
+    sha256 "26cd21bece966ff51e3a675421176c5cc30b04b750b6f13f00e8db68b962c545"
   else
     url "https://github.com/klzgrad/naiveproxy/releases/download/v#{version}/naiveproxy-v#{version}-mac-arm64.tar.xz"
-    sha256 "07d3fb3ab97b4d16ae256c6df56b67584dc83e322cbba6e4a0da5cfe843b622a"
+    sha256 "e042429807cc04a38d9918d9569ceee9f1796aac19d4f0248e03d40aafe91ed9"
   end
   license "BSD-3-Clause"
 
