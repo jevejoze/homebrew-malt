@@ -1,52 +1,71 @@
 name: follow naiveproxy
+
 on:
   schedule:
-   - cron: "0 0 * * 1"
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.REPO_SCOPED_TOKEN }}
-      - name: Fetch release version
+      - uses: actions/checkout@v4
+
+      - name: Fetch release and local version
+        shell: bash
         run: |
-          curl -sL https://api.github.com/repos/klzgrad/naiveproxy/releases/latest | \
-          jq -r ".tag_name" > /tmp/naiveproxy_lastversion.txt
-          echo "LAST_VERSION=$(cut -c 2- /tmp/naiveproxy_lastversion.txt)" >> $GITHUB_ENV
-          
-          grep version Formula/naiveproxy.rb | head -1 | cut -d'"' -f2 > /tmp/naiveproxy_localversion.txt
-          echo "LOCAL_VERSION=$(cat /tmp/naiveproxy_localversion.txt)" >> $GITHUB_ENV
+          set -euo pipefail
+          tag=$(curl -sL \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/klzgrad/naiveproxy/releases/latest | jq -r '.tag_name')
+          echo "LAST_VERSION=${tag#v}" >> "$GITHUB_ENV"
+
+          local=$(sed -n 's/^ *version \"\([^\"]*\)\".*/\1/p' Formula/naiveproxy.rb | head -n1)
+          echo "LOCAL_VERSION=$local" >> "$GITHUB_ENV"
+
       - name: Check for updates
+        shell: bash
         run: |
-          if [ "${{ env.LAST_VERSION }}" = "${{ env.LOCAL_VERSION }}" ]; then
-              echo "UPDATE=false" >> $GITHUB_ENV
+          set -euo pipefail
+          if [ "$LAST_VERSION" = "$LOCAL_VERSION" ]; then
+            echo "UPDATE=false" >> "$GITHUB_ENV"
           else
-              echo "UPDATE=true" >> $GITHUB_ENV
+            echo "UPDATE=true" >> "$GITHUB_ENV"
           fi
-      - name: Calculate the hash
+
+      - name: Calculate sha256
         if: env.UPDATE == 'true'
+        shell: bash
         run: |
-          curl -o /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz -LO https://github.com/klzgrad/naiveproxy/releases/download/v${{ env.LAST_VERSION }}/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz
-          openssl sha256 /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-x64.tar.xz >> /tmp/x64_sha256.txt
-          echo "X64_SHA256SUM=$(cut -d' ' -f2 /tmp/x64_sha256.txt)" >> $GITHUB_ENV
-          curl -o /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz -LO https://github.com/klzgrad/naiveproxy/releases/download/v${{ env.LAST_VERSION }}/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz
-          openssl sha256 /tmp/naiveproxy-v${{ env.LAST_VERSION }}-mac-arm64.tar.xz >> /tmp/arm64_sha256.txt 
-          echo "ARM64_SHA256SUM=$(cut -d' ' -f2 /tmp/arm64_sha256.txt)" >> $GITHUB_ENV
-      - name: Update Fomula
+          set -euo pipefail
+          base="https://github.com/klzgrad/naiveproxy/releases/download/v${LAST_VERSION}"
+
+          curl -sL "${base}/naiveproxy-v${LAST_VERSION}-mac-x64.tar.xz" -o /tmp/naiveproxy-mac-x64.tar.xz
+          echo "X64_SHA256SUM=$(sha256sum /tmp/naiveproxy-mac-x64.tar.xz | awk '{print $1}')" >> "$GITHUB_ENV"
+
+          curl -sL "${base}/naiveproxy-v${LAST_VERSION}-mac-arm64.tar.xz" -o /tmp/naiveproxy-mac-arm64.tar.xz
+          echo "ARM64_SHA256SUM=$(sha256sum /tmp/naiveproxy-mac-arm64.tar.xz | awk '{print $1}')" >> "$GITHUB_ENV"
+
+      - name: Update Formula
         if: env.UPDATE == 'true'
+        shell: bash
         run: |
-          cat <<EOF > Formula/naiveproxy.rb
+          set -euo pipefail
+          cat > Formula/naiveproxy.rb <<EOF
           class Naiveproxy < Formula
             desc "Network proxy"
             homepage "https://github.com/klzgrad/naiveproxy"
-            version "${{ env.LAST_VERSION }}"
+            version "${LAST_VERSION}"
             if Hardware::CPU.intel?
               url "https://github.com/klzgrad/naiveproxy/releases/download/v#{version}/naiveproxy-v#{version}-mac-x64.tar.xz"
-              sha256 "${{ env.X64_SHA256SUM }}"
+              sha256 "${X64_SHA256SUM}"
             else
               url "https://github.com/klzgrad/naiveproxy/releases/download/v#{version}/naiveproxy-v#{version}-mac-arm64.tar.xz"
-              sha256 "${{ env.ARM64_SHA256SUM }}"
+              sha256 "${ARM64_SHA256SUM}"
             end
             license "BSD-3-Clause"
 
@@ -54,20 +73,23 @@ jobs:
               bin.install "naive"
               pkgetc.install "config.json"
             end
-            
+
             service do
-              run [opt_bin/"naive","/etc/naiveproxy/config.json"]
+              run [opt_bin/"naive", etc/"naiveproxy/config.json"]
               keep_alive true
-              error_log_path var/"log/naive.log"
-              log_path var/"log/naive.log"
-              working_dir ENV["HOME"]
+              log_path var/"log/naiveproxy.log"
+              error_log_path var/"log/naiveproxy.log"
             end
           end
           EOF
-      - name: Commit
+
+      - name: Commit and push
         if: env.UPDATE == 'true'
+        shell: bash
         run: |
-          git config user.name 'github action'
-          git config user.email '<>'
-          git commit -am "update naiveproxy to ${{ env.LAST_VERSION }}"
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/naiveproxy.rb
+          git commit -m "update naiveproxy to ${LAST_VERSION}"
           git push
