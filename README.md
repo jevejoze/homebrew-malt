@@ -9,10 +9,10 @@ Spot an error? Find a place which can be improved? Or your favorite application 
 ## Usage
 
 ```sh
-brew tap simplejava8/malt
+brew tap jevejoze/malt
 brew install <formula>
 # Or just
-brew install simplejava8/malt/<formula>
+brew install jevejoze/malt/<formula>
 ```
 
 ## Formulae
